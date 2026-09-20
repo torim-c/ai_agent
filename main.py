@@ -3,7 +3,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import argparse
 from prompts import system_prompt
-from call_function import available_functions
+from call_function import *
 import json
 
 
@@ -38,33 +38,49 @@ def main():
         },
     ]
 
+    for _ in range(20):
+        response =  client.chat.completions.create(
+        model="openrouter/free",
+        messages= messages,
+        tools=available_functions,
+        #temperature=0,
+        )
 
-    response =  client.chat.completions.create(
-    model="openrouter/free",
-    messages= messages,
-    tools=available_functions,
-    #temperature=0,
-    )
+        if response.usage is None:
+            raise RuntimeError("failed API request, usage is None")
 
-    if response.usage is None:
-        raise RuntimeError("failed API request, usage is None")
+        prompt_token_nr = response.usage.prompt_tokens
+        response_token_nr = response.usage.completion_tokens
 
-    prompt_token_nr = response.usage.prompt_tokens
-    response_token_nr = response.usage.completion_tokens
-
-    if args.verbose:
-        print(f"User prompt: {args.user_prompt}")
-        print(f"Prompt tokens: {prompt_token_nr}")
-        print(f"Response tokens: {response_token_nr}")
+        if args.verbose:
+            print(f"User prompt: {args.user_prompt}")
+            print(f"Prompt tokens: {prompt_token_nr}")
+            print(f"Response tokens: {response_token_nr}")
 
 
-    message = response.choices[0].message
+        message = response.choices[0].message
+        messages.append(message) #keeps previous messages
 
-    if message.tool_calls != None:
-        for tool_call in message.tool_calls:
-            function_args = json.loads(tool_call.function.arguments or "{}")
-            print(f"Calling function: {tool_call.function.name}{function_args}")
-    else:
-        print(message.content)
+        if message.tool_calls != None:
+            for tool_call in message.tool_calls:
+                #function_args = json.loads(tool_call.function.arguments or "{}") now called in call_function.py
+                result_message = call_function(tool_call, args.verbose)
+                messages.append(result_message)
 
-main()
+                if not result_message["content"]:
+                    raise Exception("no content in result message")
+
+                if args.verbose == True:
+                    print(f"-> {result_message['content']}")
+                    
+            
+
+                #print(f"Calling function: {tool_call.function.name}{function_args}")
+        else:
+            print(message.content)
+            return  
+    print("maximum number of loops (default 20) reached")
+    sys.exit(1)
+
+if __name__ == "__main__":
+    main()
