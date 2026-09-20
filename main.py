@@ -5,7 +5,7 @@ import argparse
 
 
 
-def main():
+def main() -> None:
 
     load_dotenv()
     api_key = os.environ.get("OPENROUTER_API_KEY")
