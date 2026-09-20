@@ -14,7 +14,7 @@ def get_file_content(working_directory: str, file_path: str) -> str:
         if not valid_dir:
             return f'Error: Cannot read "{file_path}" as it is outside the permitted working directory'
 
-        if not os.path.isfile(target_file):
+        if not os.path.isfile(target_file): #accidentally wrote working_directory instead, which resulted in pkg not opening in test/always check filepaths
             return f'Error: File not found or is not a regular file: "{file_path}"'
             
         else:
