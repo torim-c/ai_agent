@@ -1,6 +1,25 @@
 import os
 from config import *
 
+schema_get_file_content = {
+    "type": "function",
+    "function": {
+        "name": "get_file_content",
+        "description": "Will return a string containing a maximum limit of characters (char_limit, default is 10000) read from the file. If the file is longer than the limit, it will truncate the return string",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "file_path": {
+                    "type": "string",
+                    "description": "File path to read file from, relative to the working directory.",
+                },
+            },
+            "required": ["file_path"],
+        },
+    },
+}
+
+
 def get_file_content(working_directory: str, file_path: str) -> str:
     try:
 
